@@ -18,23 +18,31 @@ public class Wget implements Runnable {
 
     @Override
     public void run() {
-        var file = new File("tmp.xml");
+        String fileName = "data" + url.substring(url.lastIndexOf("/"));
+        var file = new File(fileName);
+        var dataBuffer = new byte[1024];
+        int downloaded = 0;
+        long startTime = System.currentTimeMillis();
         try (var input = new URL(url).openStream();
              var output = new FileOutputStream(file)) {
-            var dataBuffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = input.read(dataBuffer, 0, dataBuffer.length)) != -1) {
-                var downloadAt = System.currentTimeMillis();
                 output.write(dataBuffer, 0, bytesRead);
-                long actualTime = System.currentTimeMillis() - downloadAt;
-                long expectedTime = bytesRead / speed;
-                if (actualTime < expectedTime) {
-                    Thread.sleep(expectedTime - actualTime);
+                downloaded += bytesRead;
+                if (downloaded >= speed) {
+                    long timePassed = System.currentTimeMillis() - startTime;
+                    if (timePassed < 1000) {
+                        Thread.sleep(1000 - timePassed);
+                    }
+                    downloaded -= speed;
+                    startTime = System.currentTimeMillis();
                 }
             }
             System.out.println("Downloaded: " + Files.size(file.toPath()) + " bytes.");
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
