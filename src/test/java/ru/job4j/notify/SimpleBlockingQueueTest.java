@@ -15,8 +15,12 @@ class SimpleBlockingQueueTest {
         List<Integer> result = new ArrayList<>();
         Thread producer = new Thread(
                 () -> {
-                    queue.offer(1);
-                    queue.offer(2);
+                    try {
+                        queue.offer(1);
+                        queue.offer(2);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
         );
         Thread consumer = new Thread(
@@ -42,14 +46,19 @@ class SimpleBlockingQueueTest {
         List<Integer> result = new ArrayList<>();
         Thread producer = new Thread(
                 () -> {
-                    queue.offer(1);
-                    queue.offer(2);
-                    queue.offer(3);
+                    try {
+                        queue.offer(1);
+                        queue.offer(2);
+                        queue.offer(3);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
         );
         Thread consumer = new Thread(
                 () -> {
                     try {
+                        Thread.sleep(1000);
                         result.add(queue.poll());
                         result.add(queue.poll());
                         result.add(queue.poll());
@@ -64,5 +73,4 @@ class SimpleBlockingQueueTest {
         consumer.join();
         assertThat(result).containsExactly(1, 2, 3);
     }
-
 }
